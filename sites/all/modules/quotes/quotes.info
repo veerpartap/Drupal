@@ -1,0 +1,7 @@
+; $Id$
+name=Favorite Quotes
+description = "Allow users to view my favoirte quotes"
+package = "Favorites"
+core = 7.x
+ 
+files[] = quotes.module

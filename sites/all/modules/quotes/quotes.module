@@ -1,0 +1,153 @@
+<?
+
+/**
+ * Implements hook_block_info.
+ */
+function quotes_block_info() {
+  global $user;
+  $blocks['quotes'] = array('info' => t('Quotes  block for @user',array('@user' => $user->name)));
+  return $blocks;
+}
+
+/*
+hook_node_insert. If your implement it with a function  quotes_node_insert, that function will run everytime a node is created.
+*/
+
+
+/**
+ * Implements hook_block_view.
+ */
+function quotes_block_view($delta = '') {
+  global $user;
+  $items='';
+  $row = '';
+
+  //$row="<ul id='quotes-list'>";
+  $r = db_query("SELECT quote, author FROM {quotes} WHERE publish= :publish", array(':publish' => 1));
+
+    if(isset($r)) {
+        foreach($r as $result)
+            { 
+              $row = $row . substr($result->quote,0,22). " [ ".$result->author. " ] <br/>";
+            }
+    }
+
+  $block['content'] = t('<br />Hello @user from <br />IP @host <br />' . $row, array(
+    '@user' => format_username($user), 
+    '@host' => $user->hostname
+  ));
+
+  return $block;
+}
+
+function quotes_help($path, $arg) {
+    if ($path == 'admin/help#quotes') {
+      return t('Quotes module help page. User Warn allows site adminitrators to send a standard e-mail to site users to notify them of improper behavior.');
+    }
+}
+
+
+
+function quotes_menu() {
+
+    $items['admin/config/people/quotes'] = array(
+      'title' => 'Quote Add',
+      'description' => 'This is the form where administartor can add quotes',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('quote_add_form'),
+      'access arguments' => array('administer users'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+
+    $items['quote_add'] = array(
+        'title' => 'Add Quote Form',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('quote_test_form'),
+        'access callback' => TRUE,
+    );
+
+  return $items;
+}
+
+/**
+  * Form builder; Create and display the User Warn configuration
+  * settings form.
+*/
+function quote_add_form($form, &$form_state) {
+      // Text field for the e-mail subject.
+      $form['quote'] = array(
+        '#type' => 'textarea',
+        '#rows' => 10,
+        '#columns' => 40,
+        '#title' => t('Quote'),
+        '#description' => t('The Best quotes added by administartor must be visible to users on front end.'),
+        '#size' => 40,
+        '#maxlength' => 120,
+        '#required' => TRUE,
+      );
+
+      // Textarea for the body of the e-mail.
+      $form['author'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Author'),
+          '#required' => TRUE,
+          '#description'=> t('Who is the author of that quote must be added here.'),
+      );
+
+      // Checkbox to indicate if admin should be sent a Bcc on e-mails.
+      $form['publish'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('You want to publish this quote'),
+          '#description' => t("If you want to make this quote publish now you then you must select checkbox now"),
+      );
+
+      // Submit button
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Save Quote'),
+      );
+
+      return $form;
+}
+
+/**
+ * Save Quote form
+ */
+function quote_add_form_submit($form, &$form_state) {
+
+    db_insert('quotes')
+      ->fields(array(
+        'quote' => $form_state['values']['quote'],
+        'author' => $form_state['values']['author'],
+        'publish' => $form_state['values']['publish']
+      ))
+      ->execute();
+
+     drupal_set_message(t('Your form has been saved.'));
+
+}
+
+function quote_test_form($form,&$form_submit) {
+
+     $form['quote'] = array(
+        '#title' => t('Quote'),
+        '#rows' => 10,
+        '#columns' => 40,
+        '#type' => 'textarea',
+        '#required' => TRUE,
+      );
+      $form['author'] = array(
+        '#title' => t('Author'),
+        '#type' => 'textfield',
+        '#required' => TRUE,
+      );
+      $form['submit'] = array(
+        '#value' => 'Submit',
+        '#type' => 'submit',
+        );
+      
+      return $form;
+}
+
+
+
