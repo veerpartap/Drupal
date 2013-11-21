@@ -1,0 +1,3 @@
+[submodule "DrupalThemes"]
+	path = sites/all/themes/ 
+	url = git@github.com:veerpartap/DrupalThemes.git
